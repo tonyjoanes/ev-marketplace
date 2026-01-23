@@ -104,12 +104,20 @@ nx build web
 # Restore .NET packages
 dotnet restore
 
-# Run Aspire AppHost (starts API + DB)
+# Run Aspire AppHost (starts PostgreSQL + API, applies migrations, seeds data)
 dotnet run --project src/EvMarketplace.AppHost
 
 # Run tests
 dotnet test
 ```
+
+The Aspire AppHost will:
+- Start a PostgreSQL container with pgAdmin
+- Automatically apply EF Core migrations
+- Seed the database with 15 sample EVs
+- Start the API on http://localhost:5000 with Swagger UI
+
+See [Database Documentation](docs/DATABASE.md) for detailed database setup and migration instructions.
 
 ## License
 
