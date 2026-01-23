@@ -1,51 +1,68 @@
-// Uncomment this line to use CSS modules
-// import styles from './app.module.css';
-import NxWelcome from './nx-welcome';
-
-import { Route, Routes, Link } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
+import { Layout } from '../components/layout';
+import { HomePage } from '../pages/HomePage';
 
 export function App() {
   return (
-    <div>
-      <NxWelcome title="web" />
-
-      {/* START: routes */}
-      {/* These routes and navigation have been generated for you */}
-      {/* Feel free to move and update them to fit your needs */}
-      <br />
-      <hr />
-      <br />
-      <div role="navigation">
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/page-2">Page 2</Link>
-          </li>
-        </ul>
-      </div>
+    <Layout>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route
-          path="/"
+          path="/calculators"
           element={
-            <div>
-              This is the generated root route.{' '}
-              <Link to="/page-2">Click here for page 2.</Link>
+            <div className="section container-custom">
+              <div className="card text-center py-12">
+                <h2 className="text-3xl font-display font-bold text-gradient mb-4">
+                  Calculators
+                </h2>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
             </div>
           }
         />
         <Route
-          path="/page-2"
+          path="/compare"
           element={
-            <div>
-              <Link to="/">Click here to go back to root page.</Link>
+            <div className="section container-custom">
+              <div className="card text-center py-12">
+                <h2 className="text-3xl font-display font-bold text-gradient mb-4">
+                  Compare EVs
+                </h2>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <div className="section container-custom">
+              <div className="card text-center py-12">
+                <h2 className="text-3xl font-display font-bold text-gradient mb-4">
+                  About EV Market
+                </h2>
+                <p className="text-gray-400">
+                  Your comprehensive guide to electric vehicles in the UK
+                </p>
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/vehicle/:id"
+          element={
+            <div className="section container-custom">
+              <div className="card text-center py-12">
+                <h2 className="text-3xl font-display font-bold text-gradient mb-4">
+                  Vehicle Details
+                </h2>
+                <p className="text-gray-400">Coming soon...</p>
+              </div>
             </div>
           }
         />
       </Routes>
-      {/* END: routes */}
-    </div>
+    </Layout>
   );
 }
 
