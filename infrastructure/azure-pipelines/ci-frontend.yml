@@ -1,0 +1,125 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - apps/**
+      - libs/**
+      - package.json
+      - nx.json
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - apps/**
+      - libs/**
+      - package.json
+      - nx.json
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  nodeVersion: '18.x'
+  npmCacheFolder: $(Pipeline.Workspace)/.npm
+
+stages:
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build React App'
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - task: Cache@2
+            displayName: 'Cache npm packages'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: $(npmCacheFolder)
+
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
+
+          - script: |
+              npx nx lint web
+            displayName: 'Lint code'
+
+          - script: |
+              npx nx test web --code-coverage --watch=false
+            displayName: 'Run unit tests'
+
+          - task: PublishTestResults@2
+            displayName: 'Publish test results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/junit.xml'
+              mergeTestResults: true
+
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish code coverage'
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '**/coverage/cobertura-coverage.xml'
+
+          - script: |
+              npx nx build web --configuration=production
+            displayName: 'Build for production'
+
+          - task: CopyFiles@2
+            displayName: 'Copy build output'
+            inputs:
+              SourceFolder: 'dist/apps/web'
+              Contents: '**'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/web'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifacts'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
+  - stage: BundleAnalysis
+    displayName: 'Bundle Analysis'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: AnalysisJob
+        displayName: 'Analyze bundle size'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
+
+          - script: |
+              npx nx build web --configuration=production --stats-json
+            displayName: 'Build with stats'
+
+          - script: |
+              npx webpack-bundle-analyzer dist/apps/web/stats.json --mode static --report bundle-report.html --no-open
+            displayName: 'Generate bundle report'
+            continueOnError: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish bundle report'
+            inputs:
+              PathtoPublish: 'bundle-report.html'
+              ArtifactName: 'bundle-analysis'
+            condition: succeededOrFailed()
