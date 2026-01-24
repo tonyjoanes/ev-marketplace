@@ -14,6 +14,8 @@ builder.AddNpgsqlDbContext<EvMarketplaceDbContext>("evmarketplace");
 
 // Add repositories
 builder.Services.AddScoped<IEvRepository, EvRepository>();
+builder.Services.AddScoped<IListingRepository, ListingRepository>();
+builder.Services.AddScoped<ISellerRepository, SellerRepository>();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -54,5 +56,7 @@ app.UseCors("AllowFrontend");
 // Map endpoints
 app.MapEvEndpoints();
 app.MapCalculatorEndpoints();
+app.MapListingEndpoints();
+app.MapSellerEndpoints();
 
 app.Run();
