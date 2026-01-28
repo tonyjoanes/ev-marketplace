@@ -1,6 +1,7 @@
 using EvMarketplace.Api.Endpoints;
 using EvMarketplace.Infrastructure.Data;
 using EvMarketplace.Infrastructure.Repositories;
+using EvMarketplace.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,13 @@ builder.AddNpgsqlDbContext<EvMarketplaceDbContext>("evmarketplace");
 builder.Services.AddScoped<IEvRepository, EvRepository>();
 builder.Services.AddScoped<IListingRepository, ListingRepository>();
 builder.Services.AddScoped<ISellerRepository, SellerRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IFeaturedListingRepository, FeaturedListingRepository>();
+
+// Add Stripe service
+var stripeApiKey = builder.Configuration["Stripe:ApiKey"] ?? throw new InvalidOperationException("Stripe API key not configured");
+builder.Services.AddSingleton<IStripeService>(new StripeService(stripeApiKey));
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -58,5 +66,8 @@ app.MapEvEndpoints();
 app.MapCalculatorEndpoints();
 app.MapListingEndpoints();
 app.MapSellerEndpoints();
+app.MapSubscriptionEndpoints();
+app.MapPaymentEndpoints();
+app.MapFeaturedListingEndpoints();
 
 app.Run();
