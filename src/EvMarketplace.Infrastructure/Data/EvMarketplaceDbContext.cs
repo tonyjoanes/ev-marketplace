@@ -13,6 +13,9 @@ public class EvMarketplaceDbContext : DbContext
     public DbSet<ElectricVehicle> ElectricVehicles => Set<ElectricVehicle>();
     public DbSet<Seller> Sellers => Set<Seller>();
     public DbSet<VehicleListing> VehicleListings => Set<VehicleListing>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<FeaturedListing> FeaturedListings => Set<FeaturedListing>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +53,9 @@ public class EvMarketplaceDbContext : DbContext
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.CurrentSubscriptionTier).IsRequired();
+            entity.Property(e => e.StripeCustomerId).HasMaxLength(100);
+            entity.Property(e => e.CurrentListingCount).IsRequired();
 
             // Handle Option<string> types
             entity.Property(e => e.CompanyName)
@@ -64,8 +70,15 @@ public class EvMarketplaceDbContext : DbContext
                     v => v != null ? LanguageExt.Prelude.Some(v) : LanguageExt.Prelude.None)
                 .HasMaxLength(200);
 
+            // Handle Option<Guid> for ActiveSubscriptionId
+            entity.Property(e => e.ActiveSubscriptionId)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(g => (Guid?)g, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.StripeCustomerId);
         });
 
         modelBuilder.Entity<VehicleListing>(entity =>
@@ -124,6 +137,112 @@ public class EvMarketplaceDbContext : DbContext
             entity.HasIndex(e => e.Condition);
             entity.HasIndex(e => e.AskingPriceGbp);
             entity.HasIndex(e => e.ListedAt);
+        });
+
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SellerId).IsRequired();
+            entity.Property(e => e.Tier).IsRequired();
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.StripeSubscriptionId).HasMaxLength(100);
+            entity.Property(e => e.StripeCustomerId).IsRequired().HasMaxLength(100);
+
+            // Handle Option<DateTime> types
+            entity.Property(e => e.EndDate)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(d => (DateTime?)d, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
+            entity.Property(e => e.TrialEndDate)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(d => (DateTime?)d, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
+            // Relationship with Seller
+            entity.HasOne<Seller>()
+                .WithMany()
+                .HasForeignKey(e => e.SellerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.SellerId);
+            entity.HasIndex(e => e.StripeSubscriptionId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CurrentPeriodEnd);
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SellerId).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.AmountGbp).HasPrecision(10, 2).IsRequired();
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.StripePaymentIntentId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+
+            // Handle Option<Guid> types
+            entity.Property(e => e.SubscriptionId)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(g => (Guid?)g, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
+            entity.Property(e => e.FeaturedListingId)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(g => (Guid?)g, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
+            // Handle Option<DateTime>
+            entity.Property(e => e.PaidAt)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(d => (DateTime?)d, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
+            // Relationship with Seller
+            entity.HasOne<Seller>()
+                .WithMany()
+                .HasForeignKey(e => e.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.SellerId);
+            entity.HasIndex(e => e.StripePaymentIntentId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<FeaturedListing>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ListingId).IsRequired();
+            entity.Property(e => e.SellerId).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.PriceGbp).HasPrecision(10, 2).IsRequired();
+            entity.Property(e => e.Status).IsRequired();
+
+            // Handle Option<Guid>
+            entity.Property(e => e.PaymentId)
+                .HasConversion(
+                    v => v.IsSome ? v.Match(g => (Guid?)g, () => null) : null,
+                    v => v.HasValue ? LanguageExt.Prelude.Some(v.Value) : LanguageExt.Prelude.None);
+
+            // Relationship with VehicleListing
+            entity.HasOne<VehicleListing>()
+                .WithMany()
+                .HasForeignKey(e => e.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Relationship with Seller
+            entity.HasOne<Seller>()
+                .WithMany()
+                .HasForeignKey(e => e.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ListingId);
+            entity.HasIndex(e => e.SellerId);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.StartDate);
+            entity.HasIndex(e => e.EndDate);
         });
     }
 }
