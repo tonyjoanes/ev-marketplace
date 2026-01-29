@@ -11,6 +11,7 @@ import { SubscriptionPage } from '../pages/SubscriptionPage';
 import { ListingsPage } from '../pages/ListingsPage';
 import { CreateListingPage } from '../pages/CreateListingPage';
 import { EditListingPage } from '../pages/EditListingPage';
+import { PaymentHistoryPage } from '../pages/PaymentHistoryPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
 export function App() {
@@ -70,7 +71,7 @@ export function App() {
           <Route path="listings/new" element={<CreateListingPage />} />
           <Route path="listings/edit/:id" element={<EditListingPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="payments" element={<div className="card"><h2 className="text-2xl font-bold text-white">Payment History</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
+          <Route path="payments" element={<PaymentHistoryPage />} />
         </Route>
       </Routes>
     </AuthProvider>
