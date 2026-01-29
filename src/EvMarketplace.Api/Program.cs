@@ -2,7 +2,10 @@ using EvMarketplace.Api.Endpoints;
 using EvMarketplace.Infrastructure.Data;
 using EvMarketplace.Infrastructure.Repositories;
 using EvMarketplace.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +27,36 @@ builder.Services.AddScoped<IFeaturedListingRepository, FeaturedListingRepository
 // Add Stripe service
 var stripeApiKey = builder.Configuration["Stripe:ApiKey"] ?? throw new InvalidOperationException("Stripe API key not configured");
 builder.Services.AddSingleton<IStripeService>(new StripeService(stripeApiKey));
+
+// Add Auth service
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT secret not configured");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "ev-marketplace";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "ev-marketplace-api";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -60,8 +93,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map endpoints
+app.MapAuthEndpoints();
 app.MapEvEndpoints();
 app.MapCalculatorEndpoints();
 app.MapListingEndpoints();

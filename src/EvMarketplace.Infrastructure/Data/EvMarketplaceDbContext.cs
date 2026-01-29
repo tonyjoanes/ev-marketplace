@@ -52,6 +52,7 @@ public class EvMarketplaceDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
             entity.Property(e => e.Type).IsRequired();
             entity.Property(e => e.CurrentSubscriptionTier).IsRequired();
             entity.Property(e => e.StripeCustomerId).HasMaxLength(100);

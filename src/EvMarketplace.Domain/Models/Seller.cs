@@ -13,6 +13,7 @@ public sealed record Seller
     public required SellerType Type { get; init; }
     public required string Email { get; init; }
     public required string PhoneNumber { get; init; }
+    public required string PasswordHash { get; init; }
     public required Option<string> CompanyName { get; init; }
     public required Option<string> Location { get; init; }
     public required DateTime CreatedAt { get; init; }
@@ -30,6 +31,7 @@ public sealed record Seller
         SellerType type,
         string email,
         string phoneNumber,
+        string passwordHash,
         Option<string> companyName = default,
         Option<string> location = default,
         DateTime? createdAt = null,
@@ -54,6 +56,7 @@ public sealed record Seller
                 Type = type,
                 Email = email,
                 PhoneNumber = phoneNumber,
+                PasswordHash = passwordHash,
                 CompanyName = companyName,
                 Location = location,
                 CreatedAt = createdAt ?? DateTime.UtcNow,
