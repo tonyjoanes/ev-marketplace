@@ -7,6 +7,7 @@ import { ComparePage } from '../pages/ComparePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { DashboardLayout, DashboardOverviewPage } from '../pages/DashboardPage';
+import { SubscriptionPage } from '../pages/SubscriptionPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
 export function App() {
@@ -64,7 +65,7 @@ export function App() {
           <Route index element={<DashboardOverviewPage />} />
           <Route path="listings" element={<div className="card"><h2 className="text-2xl font-bold text-white">My Listings</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
           <Route path="listings/new" element={<div className="card"><h2 className="text-2xl font-bold text-white">Create Listing</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
-          <Route path="subscription" element={<div className="card"><h2 className="text-2xl font-bold text-white">Subscription Management</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
+          <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="payments" element={<div className="card"><h2 className="text-2xl font-bold text-white">Payment History</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
         </Route>
       </Routes>
