@@ -106,16 +106,15 @@ public static class SellerEndpoints
         if (existing.IsNone)
             return Results.NotFound();
 
-        var seller = existing.Match(
-            Some: s => s with
-            {
-                Name = request.Name,
-                PhoneNumber = request.PhoneNumber,
-                CompanyName = request.CompanyName.ToOption(),
-                Location = request.Location.ToOption()
-            },
-            None: () => throw new InvalidOperationException()
-        );
+        // Safe: seller exists (verified by IsNone check above)
+        var existingSeller = existing.IfNone(() => default(Seller)!);
+        var seller = existingSeller with
+        {
+            Name = request.Name,
+            PhoneNumber = request.PhoneNumber,
+            CompanyName = request.CompanyName.ToOption(),
+            Location = request.Location.ToOption()
+        };
 
         var result = await repository.UpdateAsync(seller);
         return result.Match(

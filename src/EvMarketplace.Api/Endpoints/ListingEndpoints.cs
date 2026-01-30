@@ -145,17 +145,16 @@ public static class ListingEndpoints
         if (existing.IsNone)
             return Results.NotFound();
 
-        var listing = existing.Match(
-            Some: l => l with
-            {
-                AskingPriceGbp = request.AskingPriceGbp,
-                Description = request.Description,
-                Location = request.Location,
-                Mileage = request.Mileage,
-                Status = (ListingStatus)request.Status
-            },
-            None: () => throw new InvalidOperationException()
-        );
+        // Safe: listing exists (verified by IsNone check above)
+        var existingListing = existing.IfNone(() => default(VehicleListing)!);
+        var listing = existingListing with
+        {
+            AskingPriceGbp = request.AskingPriceGbp,
+            Description = request.Description,
+            Location = request.Location,
+            Mileage = request.Mileage,
+            Status = (ListingStatus)request.Status
+        };
 
         var result = await repository.UpdateAsync(listing);
         return result.Match(

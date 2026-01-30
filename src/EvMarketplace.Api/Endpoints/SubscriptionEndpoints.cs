@@ -69,7 +69,8 @@ public static class SubscriptionEndpoints
         if (sellerOption.IsNone)
             return Results.NotFound(new { error = "Seller not found" });
 
-        var seller = sellerOption.Match(s => s, () => throw new InvalidOperationException());
+        // Safe: seller exists (verified by IsNone check above)
+        var seller = sellerOption.IfNone(() => default(Seller)!);
 
         // Create Stripe customer if doesn't exist
         string customerId = seller.StripeCustomerId;
@@ -116,7 +117,8 @@ public static class SubscriptionEndpoints
         if (sellerOption.IsNone)
             return Results.NotFound(new { error = "Seller not found" });
 
-        var seller = sellerOption.Match(s => s, () => throw new InvalidOperationException());
+        // Safe: seller exists (verified by IsNone check above)
+        var seller = sellerOption.IfNone(() => default(Seller)!);
 
         if (string.IsNullOrEmpty(seller.StripeCustomerId))
             return Results.BadRequest(new { error = "Seller has no Stripe customer ID" });
@@ -155,7 +157,8 @@ public static class SubscriptionEndpoints
         if (subscriptionOption.IsNone)
             return Results.NotFound(new { error = "Subscription not found" });
 
-        var subscription = subscriptionOption.Match(s => s, () => throw new InvalidOperationException());
+        // Safe: subscription exists (verified by IsNone check above)
+        var subscription = subscriptionOption.IfNone(() => default(Subscription)!);
 
         // Cancel in Stripe
         var cancelResult = await stripeService.CancelSubscriptionAsync(
@@ -198,7 +201,8 @@ public static class SubscriptionEndpoints
         if (subscriptionOption.IsNone)
             return Results.NotFound(new { error = "Subscription not found" });
 
-        var subscription = subscriptionOption.Match(s => s, () => throw new InvalidOperationException());
+        // Safe: subscription exists (verified by IsNone check above)
+        var subscription = subscriptionOption.IfNone(() => default(Subscription)!);
 
         // Get new plan
         var newPlanOption = SubscriptionPlan.Plans.GetPlan(request.NewTier);
@@ -206,7 +210,8 @@ public static class SubscriptionEndpoints
         if (newPlanOption.IsNone)
             return Results.BadRequest(new { error = "Invalid subscription tier" });
 
-        var newPlan = newPlanOption.Match(p => p, () => throw new InvalidOperationException());
+        // Safe: plan exists (verified by IsNone check above)
+        var newPlan = newPlanOption.IfNone(() => default(SubscriptionPlan)!);
 
         // Update in Stripe
         var updateResult = await stripeService.UpdateSubscriptionAsync(

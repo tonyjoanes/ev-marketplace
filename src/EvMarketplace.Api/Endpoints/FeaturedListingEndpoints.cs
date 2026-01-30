@@ -89,7 +89,8 @@ public static class FeaturedListingEndpoints
         if (listingOption.IsNone)
             return Results.NotFound(new { error = "Listing not found" });
 
-        var listing = listingOption.Match(l => l, () => throw new InvalidOperationException());
+        // Safe: listing exists (verified by IsNone check above)
+        var listing = listingOption.IfNone(() => default(VehicleListing)!);
 
         // Verify seller
         var sellerOption = await sellerRepository.GetByIdAsync(request.SellerId);
@@ -140,7 +141,8 @@ public static class FeaturedListingEndpoints
         if (featuredOption.IsNone)
             return Results.NotFound(new { error = "Featured listing not found" });
 
-        var featured = featuredOption.Match(f => f, () => throw new InvalidOperationException());
+        // Safe: featured listing exists (verified by IsNone check above)
+        var featured = featuredOption.IfNone(() => default(FeaturedListing)!);
 
         // Get seller
         var sellerOption = await sellerRepository.GetByIdAsync(featured.SellerId);
@@ -148,7 +150,8 @@ public static class FeaturedListingEndpoints
         if (sellerOption.IsNone)
             return Results.NotFound(new { error = "Seller not found" });
 
-        var seller = sellerOption.Match(s => s, () => throw new InvalidOperationException());
+        // Safe: seller exists (verified by IsNone check above)
+        var seller = sellerOption.IfNone(() => default(Seller)!);
 
         if (string.IsNullOrEmpty(seller.StripeCustomerId))
             return Results.BadRequest(new { error = "Seller must have a Stripe customer ID" });
@@ -209,7 +212,8 @@ public static class FeaturedListingEndpoints
         if (featuredOption.IsNone)
             return Results.NotFound(new { error = "Featured listing not found" });
 
-        var featured = featuredOption.Match(f => f, () => throw new InvalidOperationException());
+        // Safe: featured listing exists (verified by IsNone check above)
+        var featured = featuredOption.IfNone(() => default(FeaturedListing)!);
 
         var canceled = featured.Cancel();
         var updateResult = await featuredRepository.UpdateAsync(canceled);

@@ -131,7 +131,8 @@ public class AuthService : IAuthService
             if (sellerOption.IsNone)
                 return "Invalid email or password";
 
-            var seller = sellerOption.Match(s => s, () => throw new InvalidOperationException());
+            // Safe: seller exists (verified by IsNone check above)
+            var seller = sellerOption.IfNone(() => default(Seller)!);
 
             // Verify password
             if (!VerifyPassword(password, seller.PasswordHash))
