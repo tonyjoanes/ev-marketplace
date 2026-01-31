@@ -133,3 +133,6 @@ StyleCopReport.xml
 *.sqlite
 *.sqlite3
 *.db
+
+## Mutation Testing
+StrykerOutput/
